@@ -21,7 +21,7 @@ vel_input = 0.0
 
 #WALL FOLLOW PARAMS
 ANGLE_RANGE = 270 # Hokuyo 10LX has 270 degrees scan
-DESIRED_DISTANCE_RIGHT = 0.7 # meters
+DESIRED_DISTANCE_RIGHT = 0.9 # meters
 DESIRED_DISTANCE_LEFT = 0.55
 VELOCITY = 2.00 # meters per second
 CAR_LENGTH = 0.50 # Traxxas Rally is 20 inches or 0.5 meters
@@ -34,10 +34,7 @@ class WallFollow:
         lidarscan_topic = '/scan'
         drive_topic = '/nav'
 	angle = 0.0
-	self.flag=False
-	self.error0=0.0
 	self.error=0.0 
-	self.T0=0.0
         self.lidar_sub = rospy.Subscriber('/scan', LaserScan, self.getRange) #TODO: Subscribe to LIDAR
         self.drive_pub = rospy.Publisher('/drive', AckermannDriveStamped, queue_size=10) #TODO: Publish to drive
 	
@@ -65,17 +62,7 @@ class WallFollow:
         global ki
         global kd
         angle = 0.0
-	
-	if self.flag==True:
-	   self.T1=rospy.get_time()
-	   d_error=(self.error0-self.error)/(self.T1-self.T0)
-	   
-	else :
-	    self.flag=True
-	    d_error=0.0
-	self.T0=self.T1
-	self.error0=self.error
-	angle=kp*self.error+kd*d_error #+ki*integral-kd*vel_input
+	angle=kp*self.error #+ki*integral-kd*vel_input
 	if angle >= 0.0 and angle<=10.0:
 	    velocity=1.5
 	elif angle>=10.0 and angle<=20.0:
@@ -107,7 +94,7 @@ class WallFollow:
         #Follow left wall as per the algorithm
 	b_l=scan_msg.ranges[int(0.75*len(scan_msg.ranges))]
 	a_l=scan_msg.ranges[int(0.75*len(scan_msg.ranges)-len(scan_msg.ranges)*50.0/360)]
-	theta_l=math.radians(50)
+	theta_l=math.radians(70)
 	alpha_l = math.atan((a_l*math.cos(theta_l)-b_l)/(a_l*math.sin(theta_l)))
 	Dt_l = b_l*math.cos(alpha_l)
 	Dtt_l = Dt_l+CAR_LENGTH *math.sin(alpha_l)
